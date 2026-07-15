@@ -1,0 +1,12 @@
+# Java
+java/target/
+java/models/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Qdrant local storage (uses a named docker volume anyway)
+qdrant_storage/
