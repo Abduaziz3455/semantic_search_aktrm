@@ -141,9 +141,19 @@ java/
   averaging over padding tokens corrupts the vector.
 - Reuse a single `OrtEnvironment` and `OrtSession`; do not create one per call.
 
-## Deliverable 3 — Gradio web app
+## Deliverable 3 — Gradio web app (the demo surface)
 
 A browser UI over the Python engine. Pure Python, no new retrieval logic.
+
+**Purpose: this is what gets shown live in a presentation to programmers of any
+stack.** The audience should understand what semantic search does within one query —
+type a question in plain language, get ranked matches with scores — without needing to
+know Python, Java, or embeddings. Optimize for legibility on a projector, not for
+features.
+
+Simplicity budget: **one file, one screen, no tabs, no custom CSS, no state.** If a
+feature needs explaining before the demo makes sense, cut it. Target well under ~100
+lines.
 
 Stack: add `gradio` to `python/requirements.txt`. Nothing else.
 
@@ -160,12 +170,20 @@ Behaviour:
 - **Inputs:** a query textbox (submit on Enter), a `limit` slider (1–10, default 3),
   and a score-`threshold` slider (0.0–1.0, default matching the CLI apps' default).
 - **Outputs:** a results table (Gradio `Dataframe`) with columns
-  `rank, score, question, answer, tags`, sorted by score descending, score rounded to
-  ~4 dp. When the top score is below the threshold, show a clear
+  `rank, score, question, answer, tags`, sorted by score descending. Round scores to
+  3 dp and truncate answers to ~120 chars — the table must stay readable on a
+  projector. When the top score is below the threshold, show a clear
   "No confident match found" message instead of a table of weak hits.
-- **Examples:** wire up 3–4 `gr.Examples`, including at least one English query that is
-  expected to surface a non-English (Russian/Uzbek) entry, so the cross-lingual behaviour
-  is visible in the UI without the user having to invent a query.
+- **Examples:** wire up 3–4 `gr.Examples` — these ARE the demo script, so choose them
+  deliberately:
+  1. A query that shares **no keywords** with its best match (e.g. "undo a release" →
+     the rollback entry) — proves it's semantic, not keyword search. This is the
+     one-click opener.
+  2. An English query whose best match is the Russian or Uzbek entry — the
+     cross-lingual moment.
+  3. A non-English query matching an English entry — the reverse.
+  4. An off-topic query (e.g. "best pizza in town") that lands below the threshold —
+     shows the system knows when it doesn't know.
 - **Graceful failure:** if the Qdrant collection is missing/empty (i.e. ingest hasn't
   run), catch it and render a friendly message telling the user to run
   `python -m ragapp.ingest` first — do not dump a raw stack trace into the UI.
@@ -198,9 +216,33 @@ The build is done when all of these pass:
    `python -m ragapp.app` launches, opens in a browser, and a natural-language query
    returns the same ranked hits the Python CLI returns for that query (same order, same
    scores). The `limit` and `threshold` controls take effect, and a below-threshold query
-   shows "No confident match found". Running the built-in cross-lingual example surfaces
-   the expected non-English entry. The UI reuses the engine — searching the same shared
-   Qdrant collection that Java wrote (criterion 1) also works through the UI.
+   shows "No confident match found". **All four built-in examples produce their
+   scripted outcome on one click** (no-keyword-overlap match, cross-lingual both ways,
+   below-threshold rejection) — the demo must not require typing during the talk. The
+   UI reuses the engine — searching the same shared Qdrant collection that Java wrote
+   (criterion 1) also works through the UI.
+
+## Demo flow (run-of-show for the presentation)
+
+Put this in the README as a "Demo" section. It is the exact sequence to perform live,
+in order, after the one-time setup (`docker compose up -d` → `python -m ragapp.ingest`
+→ `python -m ragapp.app`, done *before* the talk — nobody watches a model download):
+
+1. **Show `qa.jsonl` for ten seconds.** ~12 plain Q&A entries, a few not in English.
+   This is the entire "database". No training, no fine-tuning.
+2. **Click example 1** ("undo a release" → rollback entry). Point at the top hit:
+   *no shared keywords* — grep would find nothing here. That's the whole pitch of
+   semantic search in one row.
+3. **Click example 2** (English query → Russian/Uzbek entry). One model, one vector
+   space, 94 languages — nothing was translated.
+4. **Click example 4** (off-topic query). "No confident match found" — it returns
+   nothing rather than nonsense, because scores are comparable and thresholdable.
+5. **Optional, for the polyglot punchline:** in a terminal, run the *Java* search
+   against the same index the UI is using. Same vectors, same hits, different runtime —
+   the engine is a contract (model + pooling + prefixes), not a library.
+
+Total demo time: under 3 minutes. Steps 2–4 are one click each — that is why the
+examples are specified so precisely in Deliverable 3.
 
 ## Output style
 
