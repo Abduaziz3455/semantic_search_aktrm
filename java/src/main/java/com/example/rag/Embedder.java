@@ -138,10 +138,12 @@ public final class Embedder implements AutoCloseable {
         return Path.of("java/models/multilingual-e5-small");
     }
 
-    /** Vector parity check: prints all 384 floats for "passage: hello world". */
+    /** Vector parity check: prints all 384 floats for "passage: hello world".
+     *  Joins all args because exec:java splits the argument string on spaces. */
     public static void main(String[] args) throws Exception {
+        String text = args.length > 0 ? String.join(" ", args) : "passage: hello world";
         try (Embedder e = new Embedder(defaultModelDir())) {
-            float[] v = e.embedRaw(args.length > 0 ? args[0] : "passage: hello world");
+            float[] v = e.embedRaw(text);
             StringBuilder sb = new StringBuilder();
             for (float f : v) sb.append(String.format("%.6f%n", f));
             System.out.print(sb);
