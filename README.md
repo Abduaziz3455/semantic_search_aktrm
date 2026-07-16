@@ -17,7 +17,7 @@ docker compose up --build
 ```
 
 Starts Qdrant, auto-indexes `qa.jsonl`, and serves the **Gradio UI at http://localhost:7860**.
-First run downloads the embedding model (~470 MB) into a cached volume. Stop with
+First run downloads the embedding model (~2.3 GB) into a cached volume. Stop with
 `docker compose down`.
 
 ## Run the apps natively
@@ -49,12 +49,14 @@ localhost, so the same code runs on the host or inside compose.
 
 ## How it works
 
-The embedding model, [`intfloat/multilingual-e5-small`](https://huggingface.co/intfloat/multilingual-e5-small),
-turns any text into a 384-dimensional vector; similar meanings land near each other. Both
-apps follow the identical recipe — tokenize, mask-weighted mean pooling, L2 normalize, and
-E5's `passage:` / `query:` prefixes — so their vectors agree to ~1e-6 and share one index.
-It's chosen because it also ships as ONNX, letting the JVM run it in-process (ONNX Runtime +
-DJL tokenizer) with no Python.
+The embedding model, [`BAAI/bge-m3`](https://huggingface.co/BAAI/bge-m3), turns any text into
+a 1024-dimensional vector; similar meanings land near each other. Both apps follow the
+identical recipe — tokenize, take the `[CLS]` token, L2 normalize (bge-m3 dense retrieval is
+symmetric, so no prefixes) — so their vectors agree to ~1e-4 and share one index. It's chosen
+because it tops the compatible models on the
+[Uzbek embedding benchmark](https://github.com/Abduaziz3455/uz_embedding_benchmark/blob/main/REPORT.md)
+and ships as ONNX, letting the JVM run it in-process (ONNX Runtime + DJL tokenizer) with no
+Python.
 
 ## Demo (all one-click examples in the UI)
 

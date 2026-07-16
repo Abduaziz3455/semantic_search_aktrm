@@ -23,9 +23,10 @@ import static io.qdrant.client.VectorsFactory.vectors;
 public final class QdrantStore implements AutoCloseable {
 
     public static final String COLLECTION = "faq";
-    public static final int DIMENSIONS = 384;
+    public static final int DIMENSIONS = 1024;
     public static final int DEFAULT_LIMIT = 3;
-    public static final float DEFAULT_THRESHOLD = 0.80f;
+    // bge-m3 scores: relevant ~0.60-0.71, off-topic <=0.43 on this corpus.
+    public static final float DEFAULT_THRESHOLD = 0.50f;
 
     private final QdrantClient client;
 

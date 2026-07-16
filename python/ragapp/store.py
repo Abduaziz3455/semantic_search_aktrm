@@ -13,9 +13,11 @@ from qdrant_client.models import Distance, PointStruct, VectorParams
 from .embedder import embed_documents, embed_query
 
 COLLECTION = "faq"
-DIMENSIONS = 384
+DIMENSIONS = 1024
 DEFAULT_LIMIT = 3
-DEFAULT_THRESHOLD = 0.80
+# bge-m3 cosine scores sit lower than E5's; on this corpus relevant hits land
+# ~0.60-0.71 and off-topic tops out ~0.43, so 0.50 separates them cleanly.
+DEFAULT_THRESHOLD = 0.50
 
 # localhost for a native run; docker compose sets this to http://qdrant:6333.
 QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")

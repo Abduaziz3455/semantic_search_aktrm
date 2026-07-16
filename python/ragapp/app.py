@@ -56,7 +56,7 @@ with gr.Blocks(title="Semantic FAQ Search") as demo:
         "# Cross-lingual News Search\n"
         "No keywords, no LLM. The news feed is written in **Uzbek and Russian** — "
         "search in any language and your query meets the articles in the same "
-        "384-dimensional vector space."
+        "1024-dimensional vector space."
     )
     query = gr.Textbox(label="Search the news (any language)",
                        placeholder="satellite launched to bring internet to remote areas")

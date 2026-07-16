@@ -15,18 +15,15 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Embeds text with multilingual-e5-small via ONNX Runtime, reproducing the
+ * Embeds text with BAAI/bge-m3 via ONNX Runtime, reproducing the
  * sentence-transformers pipeline exactly: tokenize (max 512, padded),
- * mask-weighted mean pooling over the last hidden state, L2 normalize.
+ * take the [CLS] token from the last hidden state, L2 normalize.
  *
- * E5 is asymmetric: passages and queries take different prefixes. All
- * prefixing lives here so it cannot drift between Ingest and Search.
+ * bge-m3 dense retrieval is symmetric — no query/document prefixes.
  */
 public final class Embedder implements AutoCloseable {
 
-    public static final String PASSAGE_PREFIX = "passage: ";
-    public static final String QUERY_PREFIX = "query: ";
-    public static final int DIMENSIONS = 384;
+    public static final int DIMENSIONS = 1024;
 
     private final HuggingFaceTokenizer tokenizer;
     private final OrtEnvironment env;
@@ -49,15 +46,14 @@ public final class Embedder implements AutoCloseable {
     }
 
     public float[][] embedDocuments(List<String> texts) throws Exception {
-        String[] prefixed = texts.stream().map(t -> PASSAGE_PREFIX + t).toArray(String[]::new);
-        return embedBatch(prefixed);
+        return embedBatch(texts.toArray(new String[0]));
     }
 
     public float[] embedQuery(String text) throws Exception {
-        return embedBatch(new String[]{QUERY_PREFIX + text})[0];
+        return embedBatch(new String[]{text})[0];
     }
 
-    /** No prefix — for the vector parity test, which supplies one itself. */
+    /** Entry point for the cross-runtime vector parity test. */
     public float[] embedRaw(String text) throws Exception {
         return embedBatch(new String[]{text})[0];
     }
@@ -86,10 +82,10 @@ public final class Embedder implements AutoCloseable {
             }
 
             try (OrtSession.Result result = session.run(inputs)) {
-                float[][][] hidden = (float[][][]) result.get(0).getValue(); // [batch, seq, 384]
+                float[][][] hidden = (float[][][]) result.get(0).getValue(); // [batch, seq, 1024]
                 float[][] out = new float[batch][];
                 for (int i = 0; i < batch; i++) {
-                    out[i] = pool(hidden[i], encodings[i].getAttentionMask());
+                    out[i] = pool(hidden[i]);
                 }
                 return out;
             }
@@ -99,30 +95,20 @@ public final class Embedder implements AutoCloseable {
     }
 
     /**
-     * Mean pooling weighted by the attention mask, then L2 normalization.
-     * Averaging over padding tokens would corrupt the vector — only real
-     * tokens contribute.
+     * bge-m3 dense pooling: take the [CLS] token (position 0) of the last
+     * hidden state, then L2 normalize.
      */
-    private static float[] pool(float[][] hidden, long[] mask) {
-        float[] sum = new float[DIMENSIONS];
-        long count = 0;
-        for (int t = 0; t < hidden.length; t++) {
-            if (mask[t] == 0) continue;
-            count++;
-            for (int d = 0; d < DIMENSIONS; d++) {
-                sum[d] += hidden[t][d];
-            }
-        }
+    private static float[] pool(float[][] hidden) {
+        float[] cls = hidden[0].clone();
         double norm = 0;
         for (int d = 0; d < DIMENSIONS; d++) {
-            sum[d] /= count;
-            norm += (double) sum[d] * sum[d];
+            norm += (double) cls[d] * cls[d];
         }
         norm = Math.sqrt(norm);
         for (int d = 0; d < DIMENSIONS; d++) {
-            sum[d] /= (float) norm;
+            cls[d] /= (float) norm;
         }
-        return sum;
+        return cls;
     }
 
     @Override
@@ -135,15 +121,15 @@ public final class Embedder implements AutoCloseable {
         // docker compose sets MODEL_DIR; otherwise resolve relative to the repo.
         String env = System.getenv("MODEL_DIR");
         if (env != null && !env.isBlank()) return Path.of(env);
-        Path local = Path.of("models/multilingual-e5-small");
+        Path local = Path.of("models/bge-m3");
         if (local.resolve("model.onnx").toFile().exists()) return local;
-        return Path.of("java/models/multilingual-e5-small");
+        return Path.of("java/models/bge-m3");
     }
 
-    /** Vector parity check: prints all 384 floats for "passage: hello world".
+    /** Vector parity check: prints all 1024 floats for "hello world".
      *  Joins all args because exec:java splits the argument string on spaces. */
     public static void main(String[] args) throws Exception {
-        String text = args.length > 0 ? String.join(" ", args) : "passage: hello world";
+        String text = args.length > 0 ? String.join(" ", args) : "hello world";
         try (Embedder e = new Embedder(defaultModelDir())) {
             float[] v = e.embedRaw(text);
             StringBuilder sb = new StringBuilder();
