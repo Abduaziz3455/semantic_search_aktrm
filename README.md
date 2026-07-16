@@ -10,15 +10,20 @@ cross-runtime agreement is the whole point.
 
 ![Architecture](docs/architecture.svg)
 
-## Quick start (one command)
+## Quick start
 
 ```bash
-docker compose up --build
+docker compose build                     # build the (small) app image
+docker compose run --rm model-download   # one-time: fetch the ~2.3 GB model into a cached volume
+docker compose up                        # start — Qdrant + auto-ingest + Gradio UI
 ```
 
-Starts Qdrant, auto-indexes `qa.jsonl`, and serves the **Gradio UI at http://localhost:7860**.
-First run downloads the embedding model (~2.3 GB) into a cached volume. Stop with
-`docker compose down`.
+Then open the **Gradio UI at http://localhost:7860**. Stop with `docker compose down`.
+
+The slow part — the ~2.3 GB model download — is a **separate one-time step** that fills a
+cached volume, so `docker compose up` itself starts in seconds and never waits on a download.
+Run `model-download` ahead of time (e.g. before a demo); it persists across restarts. If you
+skip it, `up` still works — the ingest container just downloads the model on its first run.
 
 ## Run the apps natively
 

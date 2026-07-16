@@ -1,13 +1,15 @@
-# One command brings up the whole demo:
+# Setup is two steps — the slow model download is separated from `up`:
 #
-#   docker compose up --build
+#   docker compose build                     # build the (small) app image
+#   docker compose run --rm model-download   # one-time: fetch the ~2.3 GB model
+#                                            #   into a cached volume (skippable;
+#                                            #   ingest will fetch it otherwise)
+#   docker compose up                        # starts in seconds — no download
 #
-# -> starts Qdrant, waits until it is healthy, auto-ingests qa.jsonl, then
-#    serves the Gradio UI at http://localhost:7860
-#
-# All three services share one Qdrant collection ('faq'). The 'ingest' service
-# populates it once and exits; 'web' waits for that to finish, then serves.
-# The native Java app (see README) talks to the same Qdrant on gRPC port 6334.
+# Once the model volume is populated it persists, so `up` never waits on the
+# download again. All app services share one Qdrant collection ('faq'):
+# 'ingest' populates it once and exits; 'web' waits for that, then serves.
+# The native Java app talks to the same Qdrant on gRPC port 6334.
 services:
   qdrant:
     image: qdrant/qdrant
@@ -23,7 +25,23 @@ services:
       timeout: 3s
       retries: 30
 
+  # One-time helper: download the embedding model into the shared cache volume.
+  # Run it once with `docker compose run --rm model-download`. Not started by `up`.
+  model-download:
+    image: semantic-search-py
+    build:
+      context: .
+      dockerfile: python/Dockerfile
+    profiles: ["setup"]
+    volumes:
+      - model_cache:/hf-cache
+    command:
+      - python
+      - -c
+      - "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-m3'); print('model cached')"
+
   # Recreates the 'faq' collection and indexes qa.jsonl, then exits.
+  # Uses the cached model if present; otherwise downloads it on first run.
   ingest:
     image: semantic-search-py
     build:
@@ -35,7 +53,7 @@ services:
     environment:
       QDRANT_URL: http://qdrant:6333
     volumes:
-      - hf_cache:/hf-cache   # cache the embedding model so it downloads once
+      - model_cache:/hf-cache
     command: ["python", "-m", "ragapp.ingest"]
 
   # The Gradio demo UI. Waits for ingest to finish, then serves on :7860.
@@ -53,9 +71,9 @@ services:
     ports:
       - "7860:7860"
     volumes:
-      - hf_cache:/hf-cache
+      - model_cache:/hf-cache
     command: ["python", "-m", "ragapp.app"]
 
 volumes:
   qdrant_storage:
-  hf_cache:
+  model_cache:
