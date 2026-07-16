@@ -72,17 +72,19 @@ prefixing in exactly one function per app so it cannot drift.
 A single shared `qa.jsonl` at the repo root, one JSON object per line:
 
 ```json
-{"id": 1, "question": "How do I roll back a bad deploy?", "answer": "Run 'acme releases list', then 'acme rollback --to <release-id>'. Rollbacks are instant because the previous image is kept warm for 24 hours.", "tags": ["deploy", "operations"]}
+{"id": 4, "question": "Запущен новый спутник связи для удалённых регионов", "answer": "Ракета вывела на орбиту спутник, который обеспечит быстрым интернетом горные и сельские районы...", "tags": ["наука", "космос", "russian"]}
 ```
 
-Write ~12 entries for a fictional developer product. **Include at least two non-English
-entries** (e.g. Russian, Uzbek) — the point is to demonstrate cross-lingual retrieval,
-where an English query matches a Russian entry and vice versa.
+Write ~16 short news items across varied topics (technology, sport, economy, science,
+weather, health, culture, transport…), **entirely in Uzbek and Russian — no English**.
+`question` holds the headline and `answer` the summary. The point is to demonstrate
+cross-lingual retrieval: an English or Russian query matches the relevant Uzbek item and
+vice versa. Keep the items generic and clearly synthetic — no real named people or
+specific factual claims.
 
-**Indexing strategy:** embed `question + "\n" + answer` as one chunk per line. The
-question carries the phrasing a user would type; the answer carries the vocabulary they
-might search by. Store `question`, `answer`, and `tags` in the Qdrant payload; use the
-JSONL `id` as the point ID.
+**Indexing strategy:** embed `question + "\n" + answer` (headline + summary) as one chunk
+per line. Store `question`, `answer`, and `tags` in the Qdrant payload; use the JSONL `id`
+as the point ID.
 
 ## Deliverable 1 — Python app
 

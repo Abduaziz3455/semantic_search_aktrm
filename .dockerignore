@@ -1,0 +1,5 @@
+.git
+**/models
+**/target
+**/__pycache__
+*.log

@@ -7,16 +7,16 @@ import gradio as gr
 
 from . import store
 
-# Each example is one beat of the live demo:
-# 1. no shared keywords with its match  -> semantic, not grep
-# 2. English query, Russian best match  -> cross-lingual
-# 3. Uzbek query, English best match    -> cross-lingual, reversed
-# 4. off-topic                          -> below threshold, honest "no match"
+# The news feed is entirely Uzbek + Russian. Each example is one demo beat:
+# 1. English query      -> Russian article  (cross-lingual, zero shared words)
+# 2. Uzbek query        -> Russian article  (cross-lingual between the two langs)
+# 3. Russian query      -> Uzbek article    (the reverse direction)
+# 4. off-topic          -> below threshold, honest "no match"
 EXAMPLES = [
-    "how do I undo a release?",
-    "why is my app slow after being idle for a while?",
-    "loyihani qanday o'chirib tashlayman?",
-    "what's the best pizza in town?",
+    "satellite launched to bring internet to remote areas",
+    "shaharda yangi kasalxona ochildi",
+    "новая ветка метро в столице",
+    "recipe for a chocolate cake",
 ]
 
 
@@ -43,7 +43,7 @@ def do_search(query: str, limit: int, threshold: float):
             rank,
             round(h.score, 3),
             h.question,
-            h.answer if len(h.answer) <= 120 else h.answer[:117] + "...",
+            h.answer if len(h.answer) <= 160 else h.answer[:157] + "...",
             ", ".join(h.tags),
         ]
         for rank, h in enumerate(hits, 1)
@@ -53,16 +53,18 @@ def do_search(query: str, limit: int, threshold: float):
 
 with gr.Blocks(title="Semantic FAQ Search") as demo:
     gr.Markdown(
-        "# Semantic FAQ Search\n"
-        "No keywords, no LLM — a query and 12 Q&A entries meet in the same "
+        "# Cross-lingual News Search\n"
+        "No keywords, no LLM. The news feed is written in **Uzbek and Russian** — "
+        "search in any language and your query meets the articles in the same "
         "384-dimensional vector space."
     )
-    query = gr.Textbox(label="Ask in any language", placeholder="how do I undo a release?")
+    query = gr.Textbox(label="Search the news (any language)",
+                       placeholder="satellite launched to bring internet to remote areas")
     with gr.Row():
         limit = gr.Slider(1, 10, value=store.DEFAULT_LIMIT, step=1, label="Max results")
         threshold = gr.Slider(0.0, 1.0, value=store.DEFAULT_THRESHOLD, step=0.01, label="Score threshold")
     results = gr.Dataframe(
-        headers=["rank", "score", "question", "answer", "tags"],
+        headers=["rank", "score", "headline", "summary", "topics"],
         visible=False,
         interactive=False,
     )

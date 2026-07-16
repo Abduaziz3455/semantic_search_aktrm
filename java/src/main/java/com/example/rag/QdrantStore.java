@@ -30,8 +30,11 @@ public final class QdrantStore implements AutoCloseable {
     private final QdrantClient client;
 
     public QdrantStore() {
+        // localhost for a native run; docker compose sets QDRANT_HOST=qdrant.
+        String host = System.getenv().getOrDefault("QDRANT_HOST", "localhost");
+        int port = Integer.parseInt(System.getenv().getOrDefault("QDRANT_PORT", "6334"));
         client = new QdrantClient(
-                QdrantGrpcClient.newBuilder("localhost", 6334, false).build());
+                QdrantGrpcClient.newBuilder(host, port, false).build());
     }
 
     public void recreateCollection() throws Exception {

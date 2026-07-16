@@ -132,7 +132,9 @@ public final class Embedder implements AutoCloseable {
     }
 
     public static Path defaultModelDir() {
-        // works from repo root or from java/
+        // docker compose sets MODEL_DIR; otherwise resolve relative to the repo.
+        String env = System.getenv("MODEL_DIR");
+        if (env != null && !env.isBlank()) return Path.of(env);
         Path local = Path.of("models/multilingual-e5-small");
         if (local.resolve("model.onnx").toFile().exists()) return local;
         return Path.of("java/models/multilingual-e5-small");

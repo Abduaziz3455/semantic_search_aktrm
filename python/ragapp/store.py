@@ -4,6 +4,7 @@
 Gradio UI (app.py) both call it, so ranking and threshold behaviour cannot
 diverge between them.
 """
+import os
 from dataclasses import dataclass
 
 from qdrant_client import QdrantClient
@@ -16,6 +17,9 @@ DIMENSIONS = 384
 DEFAULT_LIMIT = 3
 DEFAULT_THRESHOLD = 0.80
 
+# localhost for a native run; docker compose sets this to http://qdrant:6333.
+QDRANT_URL = os.environ.get("QDRANT_URL", "http://localhost:6333")
+
 
 @dataclass
 class Hit:
@@ -26,7 +30,7 @@ class Hit:
 
 
 def client() -> QdrantClient:
-    return QdrantClient(url="http://localhost:6333")
+    return QdrantClient(url=QDRANT_URL)
 
 
 def recreate_collection(c: QdrantClient) -> None:

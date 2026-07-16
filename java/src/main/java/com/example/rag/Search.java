@@ -2,6 +2,7 @@ package com.example.rag;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -13,6 +14,10 @@ import java.util.List;
 public final class Search {
 
     public static void main(String[] args) throws Exception {
+        // Force UTF-8 stdout so Cyrillic / Uzbek output isn't mangled in
+        // consoles whose default charset is ASCII.
+        System.setOut(new PrintStream(System.out, true, StandardCharsets.UTF_8));
+
         int limit = QdrantStore.DEFAULT_LIMIT;
         float threshold = QdrantStore.DEFAULT_THRESHOLD;
 
