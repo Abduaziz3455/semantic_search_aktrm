@@ -1,142 +1,76 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 720" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" font-family="'Segoe UI', Helvetica, Arial, sans-serif">
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-end">
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-end">
       <path d="M0,0 L10,5 L0,10 z" fill="#495057"/>
     </marker>
-    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-end">
-      <path d="M0,0 L10,5 L0,10 z" fill="#3b5bdb"/>
-    </marker>
     <style>
-      .card   { rx: 12; stroke-width: 1.5; }
-      .h      { font-size: 17px; font-weight: 700; }
-      .s      { font-size: 13px; fill: #495057; }
-      .lbl    { font-size: 12.5px; fill: #495057; }
-      .port   { font-size: 12px; font-weight: 700; }
-      .step   { font-size: 13px; font-weight: 600; fill: #212529; }
-      .edge   { stroke: #495057; stroke-width: 2; fill: none; }
-      .edgeb  { stroke: #3b5bdb; stroke-width: 2.5; fill: none; }
+      .h    { font-size: 19px; font-weight: 700; fill: #212529; }
+      .t    { font-size: 15px; fill: #495057; }
+      .edge { stroke: #495057; stroke-width: 2.5; fill: none; }
+      .elbl { font-size: 14px; font-weight: 600; fill: #495057; }
+      .num  { font-size: 16px; font-weight: 700; fill: #ffffff; }
     </style>
   </defs>
 
-  <!-- background -->
-  <rect x="0" y="0" width="1060" height="720" fill="#ffffff"/>
-  <rect x="0" y="0" width="1060" height="720" fill="none" stroke="#e9ecef" stroke-width="2"/>
+  <rect x="0" y="0" width="1000" height="640" fill="#ffffff"/>
 
   <!-- title -->
-  <text x="530" y="46" text-anchor="middle" font-size="25" font-weight="700" fill="#212529">Semantic Search — one shared index, two native runtimes</text>
-  <text x="530" y="72" text-anchor="middle" class="s">No LLM. A query and an Uzbek/Russian news feed meet in the same 384-dimensional vector space; nearest neighbours are the results.</text>
+  <text x="500" y="50" text-anchor="middle" font-size="26" font-weight="700" fill="#212529">How the search works</text>
+  <text x="500" y="78" text-anchor="middle" class="t">No keywords, no translation, no LLM — just distance between vectors.</text>
 
-  <!-- ===================== runtimes + hub ===================== -->
-  <!-- Gradio -->
-  <rect x="40" y="110" width="250" height="58" class="card" fill="#fff4e6" stroke="#f08c00" rx="12"/>
-  <text x="165" y="138" text-anchor="middle" class="h" fill="#e8590c">Gradio UI</text>
-  <text x="165" y="157" text-anchor="middle" class="lbl">browser demo · localhost:7860</text>
+  <!-- step 1: index the news -->
+  <circle cx="56" cy="130" r="14" fill="#1c7ed6"/>
+  <text x="56" y="136" text-anchor="middle" class="num">1</text>
+  <text x="80" y="136" class="h" fill="#1971c2">Add the news (once)</text>
 
-  <!-- Python app -->
-  <rect x="40" y="196" width="250" height="86" class="card" fill="#e7f5ff" stroke="#1c7ed6" rx="12"/>
-  <text x="165" y="224" text-anchor="middle" class="h" fill="#1971c2">Python app</text>
-  <text x="165" y="245" text-anchor="middle" class="lbl">sentence-transformers</text>
-  <text x="165" y="263" text-anchor="middle" class="lbl">ingest · search · Gradio</text>
+  <rect x="40" y="160" width="240" height="100" rx="14" fill="#e7f5ff" stroke="#1c7ed6" stroke-width="1.5"/>
+  <text x="160" y="196" text-anchor="middle" class="h">📰 News file</text>
+  <text x="160" y="222" text-anchor="middle" class="t">16 short articles</text>
+  <text x="160" y="243" text-anchor="middle" class="t">in Uzbek and Russian</text>
 
-  <!-- Java app -->
-  <rect x="770" y="196" width="250" height="86" class="card" fill="#fff0f6" stroke="#e64980" rx="12"/>
-  <text x="895" y="224" text-anchor="middle" class="h" fill="#c2255c">Java app</text>
-  <text x="895" y="245" text-anchor="middle" class="lbl">ONNX Runtime + DJL tokenizers</text>
-  <text x="895" y="263" text-anchor="middle" class="lbl">in-process, no Python</text>
+  <!-- step 2: search -->
+  <circle cx="56" cy="400" r="14" fill="#e8590c"/>
+  <text x="56" y="406" text-anchor="middle" class="num">2</text>
+  <text x="80" y="406" class="h" fill="#e8590c">Search (every query)</text>
 
-  <!-- Qdrant hub -->
-  <rect x="410" y="176" width="240" height="126" class="card" fill="#edf2ff" stroke="#3b5bdb" stroke-width="2" rx="14"/>
-  <text x="530" y="212" text-anchor="middle" class="h" fill="#3b5bdb" font-size="19">Qdrant</text>
-  <text x="530" y="236" text-anchor="middle" class="s">collection <tspan font-weight="700" fill="#212529">faq</tspan></text>
-  <text x="530" y="258" text-anchor="middle" class="s">384-d · cosine distance</text>
-  <text x="530" y="284" text-anchor="middle" class="lbl">one index, written &amp; read by both apps</text>
+  <rect x="40" y="430" width="240" height="100" rx="14" fill="#fff4e6" stroke="#f08c00" stroke-width="1.5"/>
+  <text x="160" y="466" text-anchor="middle" class="h">🔍 Your question</text>
+  <text x="160" y="492" text-anchor="middle" class="t">in any language —</text>
+  <text x="160" y="513" text-anchor="middle" class="t">English, Uzbek, Russian…</text>
 
-  <!-- Gradio -> Python -->
-  <path d="M165,168 L165,196" class="edge" marker-end="url(#arrow)"/>
+  <!-- shared model -->
+  <rect x="370" y="290" width="250" height="120" rx="14" fill="#f3f0ff" stroke="#7048e8" stroke-width="2"/>
+  <text x="495" y="330" text-anchor="middle" class="h">🧠 Embedding model</text>
+  <text x="495" y="356" text-anchor="middle" class="t">turns any text into a point</text>
+  <text x="495" y="377" text-anchor="middle" class="t">in the same "meaning space"</text>
 
-  <!-- Python <-> Qdrant (REST) -->
-  <path d="M290,232 L406,232" class="edgeb" marker-end="url(#arrowBlue)" marker-start="url(#arrowBlue)"/>
-  <text x="348" y="222" text-anchor="middle" class="port" fill="#3b5bdb">REST</text>
-  <text x="348" y="248" text-anchor="middle" class="port" fill="#3b5bdb">:6333</text>
+  <!-- vector DB -->
+  <rect x="720" y="160" width="240" height="100" rx="14" fill="#edf2ff" stroke="#3b5bdb" stroke-width="2"/>
+  <text x="840" y="196" text-anchor="middle" class="h">🗄️ Qdrant</text>
+  <text x="840" y="222" text-anchor="middle" class="t">vector database —</text>
+  <text x="840" y="243" text-anchor="middle" class="t">stores all article points</text>
 
-  <!-- Java <-> Qdrant (gRPC) -->
-  <path d="M770,232 L654,232" class="edgeb" marker-end="url(#arrowBlue)" marker-start="url(#arrowBlue)"/>
-  <text x="712" y="222" text-anchor="middle" class="port" fill="#3b5bdb">gRPC</text>
-  <text x="712" y="248" text-anchor="middle" class="port" fill="#3b5bdb">:6334</text>
+  <!-- results -->
+  <rect x="720" y="430" width="240" height="100" rx="14" fill="#ebfbee" stroke="#2f9e44" stroke-width="2"/>
+  <text x="840" y="466" text-anchor="middle" class="h">🏆 Ranked results</text>
+  <text x="840" y="492" text-anchor="middle" class="t">closest articles first,</text>
+  <text x="840" y="513" text-anchor="middle" class="t">each with a score</text>
 
-  <!-- ===================== shared embedding contract ===================== -->
-  <rect x="40" y="350" width="980" height="150" rx="14" fill="#f8f9fa" stroke="#adb5bd" stroke-dasharray="6 4"/>
-  <text x="60" y="378" class="h" fill="#212529">Shared embedding contract</text>
-  <text x="530" y="378" text-anchor="middle" class="s">intfloat/multilingual-e5-small — implemented identically in both runtimes</text>
-  <text x="1000" y="378" text-anchor="end" class="s">94 languages</text>
+  <!-- arrows -->
+  <!-- news -> model -->
+  <path d="M280,225 C330,250 340,280 380,300" class="edge" marker-end="url(#arrow)"/>
+  <!-- query -> model -->
+  <path d="M280,470 C330,445 340,415 380,398" class="edge" marker-end="url(#arrow)"/>
+  <!-- model -> qdrant (store) -->
+  <path d="M620,310 C670,285 680,255 715,232" class="edge" marker-end="url(#arrow)"/>
+  <text x="645" y="268" class="elbl">store</text>
+  <!-- qdrant -> results (nearest) -->
+  <path d="M840,260 L840,425" class="edge" marker-end="url(#arrow)"/>
+  <text x="852" y="335" class="elbl">find the</text>
+  <text x="852" y="354" class="elbl">nearest points</text>
 
-  <!-- pipeline steps -->
-  <!-- step boxes -->
-  <g>
-    <rect x="60"  y="404" width="150" height="64" rx="10" fill="#ffffff" stroke="#ced4da"/>
-    <text x="135" y="432" text-anchor="middle" class="step">prefix</text>
-    <text x="135" y="452" text-anchor="middle" class="lbl">passage: / query:</text>
-
-    <rect x="238" y="404" width="140" height="64" rx="10" fill="#ffffff" stroke="#ced4da"/>
-    <text x="308" y="432" text-anchor="middle" class="step">tokenize</text>
-    <text x="308" y="452" text-anchor="middle" class="lbl">≤ 512 tokens</text>
-
-    <rect x="406" y="404" width="150" height="64" rx="10" fill="#ffffff" stroke="#ced4da"/>
-    <text x="481" y="432" text-anchor="middle" class="step">E5 transformer</text>
-    <text x="481" y="452" text-anchor="middle" class="lbl">last hidden state</text>
-
-    <rect x="584" y="404" width="160" height="64" rx="10" fill="#ffffff" stroke="#ced4da"/>
-    <text x="664" y="432" text-anchor="middle" class="step">mean pooling</text>
-    <text x="664" y="452" text-anchor="middle" class="lbl">masked by attention</text>
-
-    <rect x="772" y="404" width="120" height="64" rx="10" fill="#ffffff" stroke="#ced4da"/>
-    <text x="832" y="432" text-anchor="middle" class="step">L2 normalize</text>
-    <text x="832" y="452" text-anchor="middle" class="lbl">unit vector</text>
-
-    <rect x="920" y="404" width="100" height="64" rx="10" fill="#edf2ff" stroke="#3b5bdb"/>
-    <text x="970" y="432" text-anchor="middle" class="step" fill="#3b5bdb">384-d</text>
-    <text x="970" y="452" text-anchor="middle" class="lbl">vector</text>
-  </g>
-  <!-- pipeline arrows -->
-  <path d="M210,436 L236,436" class="edge" marker-end="url(#arrow)"/>
-  <path d="M378,436 L404,436" class="edge" marker-end="url(#arrow)"/>
-  <path d="M556,436 L582,436" class="edge" marker-end="url(#arrow)"/>
-  <path d="M744,436 L770,436" class="edge" marker-end="url(#arrow)"/>
-  <path d="M892,436 L918,436" class="edge" marker-end="url(#arrow)"/>
-
-  <!-- link apps to the shared contract -->
-  <path d="M165,282 C165,320 165,320 165,350" class="edge" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
-  <path d="M895,282 C895,320 895,320 895,350" class="edge" stroke-dasharray="4 4" marker-end="url(#arrow)"/>
-  <text x="530" y="340" text-anchor="middle" class="lbl">both apps call the same pipeline ↓</text>
-
-  <!-- vector back up to Qdrant -->
-  <path d="M970,404 C970,330 700,320 650,290" class="edgeb" stroke-dasharray="4 4" marker-end="url(#arrowBlue)"/>
-  <text x="835" y="330" text-anchor="middle" class="port" fill="#3b5bdb">vectors ↑ upsert / search</text>
-
-  <!-- ===================== inputs / outputs ===================== -->
-  <rect x="40" y="540" width="300" height="150" rx="12" fill="#ffffff" stroke="#ced4da"/>
-  <text x="60" y="568" class="h" fill="#212529">qa.jsonl</text>
-  <text x="60" y="590" class="s">16 news items · Uzbek + Russian</text>
-  <text x="60" y="612" class="lbl">indexed as: passage: headline + summary</text>
-  <text x="60" y="634" class="lbl">payload: headline · summary · topics</text>
-  <text x="60" y="662" class="lbl" font-style="italic">the entire "database" — no training</text>
-
-  <rect x="360" y="540" width="320" height="150" rx="12" fill="#ffffff" stroke="#ced4da"/>
-  <text x="380" y="568" class="h" fill="#212529">Query (any language)</text>
-  <text x="380" y="590" class="s">"satellite launched for remote internet"</text>
-  <text x="380" y="614" class="lbl">embedded as: query: … → nearest neighbours</text>
-  <text x="380" y="642" class="lbl">English query → Russian / Uzbek article</text>
-  <text x="380" y="666" class="lbl">score &lt; threshold → "no confident match"</text>
-
-  <rect x="700" y="540" width="320" height="150" rx="12" fill="#ffffff" stroke="#ced4da"/>
-  <text x="720" y="568" class="h" fill="#212529">Result</text>
-  <text x="720" y="590" class="s">ranked list — rank · score · Q · answer</text>
-  <text x="720" y="620" class="lbl">Cross-runtime proof: vectors from Python</text>
-  <text x="720" y="640" class="lbl">and Java agree to ~1e-6, so either app can</text>
-  <text x="720" y="660" class="lbl">search an index the other built.</text>
-
-  <!-- flow arrows in/out -->
-  <path d="M190,540 L190,470" class="edge" marker-end="url(#arrow)"/>
-  <path d="M520,540 L520,470" class="edge" marker-end="url(#arrow)"/>
-  <path d="M650,500 C650,520 700,540 758,560" class="edge" marker-end="url(#arrow)"/>
+  <!-- key idea -->
+  <rect x="40" y="560" width="920" height="56" rx="12" fill="#f8f9fa" stroke="#adb5bd" stroke-dasharray="6 4"/>
+  <text x="500" y="584" text-anchor="middle" class="t" font-weight="700" fill="#212529">Same meaning → nearby points. That's why an English query finds a Russian article.</text>
+  <text x="500" y="606" text-anchor="middle" class="t">Built twice — Python and Java — with the exact same model recipe, sharing this one index.</text>
 </svg>
