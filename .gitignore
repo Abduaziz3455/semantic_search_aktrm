@@ -1,6 +1,10 @@
+# Model weights — multi-GB, provisioned locally rather than committed.
+# Covers both the Python copy (models/bge-m3) and the Java ONNX export
+# (java/models/bge-m3).
+models/
+
 # Java
 java/target/
-java/models/
 
 # Python
 __pycache__/

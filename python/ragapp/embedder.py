@@ -5,14 +5,33 @@ the [CLS] token (not mean). sentence-transformers applies CLS pooling and L2
 normalization for us; the Java app reproduces the same contract by hand. All
 embedding goes through this module so it cannot drift.
 """
+import os
 from functools import lru_cache
+from pathlib import Path
 
 from sentence_transformers import SentenceTransformer
 
-MODEL_NAME = "BAAI/bge-m3"
 # News items are short; capping the sequence keeps CPU inference fast and must
 # match the Java tokenizer's max length so both truncate identically.
 MAX_SEQ_LENGTH = 512
+
+# The model ships in the repo at models/bge-m3, so nothing is downloaded at
+# runtime. Mirrors Embedder.defaultModelDir() on the Java side.
+_REPO_MODEL_DIR = Path(__file__).resolve().parents[2] / "models" / "bge-m3"
+
+
+def _resolve_model() -> str:
+    # docker compose sets MODEL_PATH; otherwise use the repo copy, and fall back
+    # to the hub name only if the copy is missing.
+    env = os.environ.get("MODEL_PATH")
+    if env:
+        return env
+    if (_REPO_MODEL_DIR / "config.json").exists():
+        return str(_REPO_MODEL_DIR)
+    return "BAAI/bge-m3"
+
+
+MODEL_NAME = _resolve_model()
 
 
 @lru_cache(maxsize=1)

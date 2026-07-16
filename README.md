@@ -14,16 +14,19 @@ cross-runtime agreement is the whole point.
 
 ```bash
 docker compose build                     # build the (small) app image
-docker compose run --rm model-download   # one-time: fetch the ~2.3 GB model into a cached volume
+docker compose run --rm model-download   # one-time: fetch the ~2.3 GB model (skipped if present)
 docker compose up                        # start — Qdrant + auto-ingest + Gradio UI
 ```
 
 Then open the **Gradio UI at http://localhost:7860**. Stop with `docker compose down`.
 
-The slow part — the ~2.3 GB model download — is a **separate one-time step** that fills a
-cached volume, so `docker compose up` itself starts in seconds and never waits on a download.
-Run `model-download` ahead of time (e.g. before a demo); it persists across restarts. If you
-skip it, `up` still works — the ingest container just downloads the model on its first run.
+The ~2.3 GB embedding model lives at `models/bge-m3` and is mounted read-only into the
+containers, so `up` starts in seconds and **nothing is downloaded at runtime**. The weights
+are too large for git, so `model-download` fetches them once; it's idempotent, and you can
+skip it entirely by populating `models/bge-m3` yourself — copying a `BAAI/bge-m3` snapshot out
+of a local Hugging Face cache (`~/.cache/huggingface/hub`) works and needs no network. Once
+the directory exists the whole demo runs with no Hugging Face access. Override the location
+with `MODEL_PATH`; if it's missing, the apps fall back to downloading from the hub.
 
 ## Run the apps natively
 
@@ -81,6 +84,7 @@ Uzbek and Russian. Generic and synthetic; the whole "database", no training.
 ```
 qa.jsonl                       # shared data
 docker-compose.yml             # qdrant + auto-ingest + Gradio
+models/bge-m3/                 # embedding model, mounted into the apps (not in git)
 docs/architecture.svg          # the diagram above
 docs/repo_qr.png               # QR to this repo (for slides)
 python/ragapp/                 # embedder, store, ingest, search, app (Gradio)

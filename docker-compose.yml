@@ -1,14 +1,16 @@
-# Setup is two steps — the slow model download is separated from `up`:
+# Setup — nothing is downloaded during `up`:
 #
 #   docker compose build                     # build the (small) app image
-#   docker compose run --rm model-download   # one-time: fetch the ~2.3 GB model
-#                                            #   into a cached volume (skippable;
-#                                            #   ingest will fetch it otherwise)
-#   docker compose up                        # starts in seconds — no download
+#   docker compose run --rm model-download   # no-op if ./models/bge-m3 exists
+#   docker compose up                        # starts in seconds
 #
-# Once the model volume is populated it persists, so `up` never waits on the
-# download again. All app services share one Qdrant collection ('faq'):
-# 'ingest' populates it once and exits; 'web' waits for that, then serves.
+# The ~2.3 GB embedding model lives at ./models/bge-m3 and is mounted read-only
+# into the app services, so a populated directory means no Hugging Face access
+# is ever needed. It is mounted rather than baked into the image to keep the
+# image small (.dockerignore excludes **/models from the build context).
+#
+# All app services share one Qdrant collection ('faq'): 'ingest' populates it
+# once and exits; 'web' waits for that, then serves.
 # The native Java app talks to the same Qdrant on gRPC port 6334.
 services:
   qdrant:
@@ -25,8 +27,11 @@ services:
       timeout: 3s
       retries: 30
 
-  # One-time helper: download the embedding model into the shared cache volume.
-  # Run it once with `docker compose run --rm model-download`. Not started by `up`.
+  # One-time helper that populates ./models/bge-m3 from Hugging Face.
+  # Idempotent: if the model is already there it downloads nothing, so it is
+  # safe to re-run (and to skip entirely when the directory is provisioned by
+  # other means, e.g. copied from a local HF cache).
+  # Run with `docker compose run --rm model-download`. Not started by `up`.
   model-download:
     image: semantic-search-py
     build:
@@ -34,14 +39,22 @@ services:
       dockerfile: python/Dockerfile
     profiles: ["setup"]
     volumes:
-      - model_cache:/hf-cache
+      - ./models:/models   # writable — this is the service that fills it
     command:
       - python
       - -c
-      - "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-m3'); print('model cached')"
+      - |
+        from pathlib import Path
+        dest = Path("/models/bge-m3")
+        if (dest / "config.json").exists():
+            print(f"model already present at {dest} - skipping download")
+        else:
+            from sentence_transformers import SentenceTransformer
+            print("downloading BAAI/bge-m3 ...")
+            SentenceTransformer("BAAI/bge-m3").save(str(dest))
+            print(f"model saved to {dest}")
 
   # Recreates the 'faq' collection and indexes qa.jsonl, then exits.
-  # Uses the cached model if present; otherwise downloads it on first run.
   ingest:
     image: semantic-search-py
     build:
@@ -52,8 +65,9 @@ services:
         condition: service_healthy
     environment:
       QDRANT_URL: http://qdrant:6333
+      MODEL_PATH: /models/bge-m3
     volumes:
-      - model_cache:/hf-cache
+      - ./models/bge-m3:/models/bge-m3:ro
     command: ["python", "-m", "ragapp.ingest"]
 
   # The Gradio demo UI. Waits for ingest to finish, then serves on :7860.
@@ -67,13 +81,13 @@ services:
         condition: service_completed_successfully
     environment:
       QDRANT_URL: http://qdrant:6333
+      MODEL_PATH: /models/bge-m3
       GRADIO_SERVER_NAME: 0.0.0.0   # bind all interfaces so the host can reach it
     ports:
       - "7860:7860"
     volumes:
-      - model_cache:/hf-cache
+      - ./models/bge-m3:/models/bge-m3:ro
     command: ["python", "-m", "ragapp.app"]
 
 volumes:
   qdrant_storage:
-  model_cache:
